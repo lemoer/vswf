@@ -103,10 +103,58 @@ def sph_harm_diff_phi(theta, phi):
 def sph_harm_diff_theta(theta, phi):
     pass
 
+def fix_dim(A, axis):
+    # Repeats the last column or row of a matrix once, so the dimension
+    # in that axis is increased by 1.
+    if axis == 0:
+        return np.append(A, np.reshape(A[-1,:], (1, A.shape[1])), 0)
+    elif axis == 1:
+        return np.append(A, np.reshape(A[:,-1], (A.shape[0], 1)), 1)
+    else:
+        raise Exception('fix_dim() is not implemented for axes > 1!')
+
+def calc_dA(theta, phi):
+    assert theta[0,0] == theta[1,0], 'Grid direction is not as expected!'
+    dtheta = fix_dim(np.diff(theta, axis=1), axis=1)
+    dphi = fix_dim(np.diff(phi, axis=0), axis=0)
+    return dtheta * dphi * np.sin(theta)
+
+
 x, y, z = coord_s2c(1, theta, phi)
 #r, theta, phi = coord_c2s(x, y, z)
 #x, y, z = coord_s2c(1, theta, phi)
 
+dA = calc_dA(theta, phi)
+
+def check_correlation_for_my_sph_harm(theta, phi, dA):
+    m = 0
+    L = 10
+    C = np.zeros((L, L), dtype=complex)
+
+    # make arrays 1D, so we can use the dot() properly.
+    theta = np.ravel(theta)
+    phi = np.ravel(phi)
+    dA = np.ravel(dA)
+
+    # do the work
+    for l in range(1, L+1):
+        for l2 in range(1, L+1):
+            f1 = my_sph_harm(l, m, theta, phi)
+            f2 = my_sph_harm(l2, m, theta, phi)
+            # f1 = sph_harm(m, l, phi, theta)
+            # f2 = sph_harm(m, l2, phi, theta)
+            
+            C[l-1, l2-1] = np.dot(f2.conj(), dA*f1)
+
+    plt.figure()
+    plt.imshow(np.abs(C))
+    plt.colorbar()
+
+    return C, f1, f2
+
+
+
+check_correlation_for_my_sph_harm(theta, phi, dA)
 
 m, l = 0, 4
 
