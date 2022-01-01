@@ -5,7 +5,7 @@ import numpy as np
 from scipy.special import sph_harm, factorial, lpmv
 
 phi = np.linspace(0, 2*np.pi, 100)
-theta = np.linspace(0, np.pi, 100)
+theta = np.linspace(0, np.pi, 50)
 theta, phi = np.meshgrid(theta, phi)
 
 def coord_s2c(r, theta, phi):
