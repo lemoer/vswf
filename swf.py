@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm, colors
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-from scipy.special import sph_harm, factorial, lpmv
+from scipy.special import sph_harm, factorial, lpmv, spherical_jn, spherical_yn
 
 phi = np.linspace(0, 2*np.pi, 100)
 theta = np.linspace(0, np.pi, 50)
@@ -248,6 +248,53 @@ def test_vec_sph_harm():
     test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 3, 1, 1)
     test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 3, 0, 0)
 
+def spherical_hn1(n,z,derivative=False):
+    """ Spherical Hankel Function of the First Kind """
+    return spherical_jn(n,z,derivative)+1j*spherical_yn(n,z,derivative)
+
+def spherical_hn2(n,z,derivative=False):
+    """ Spherical Hankel Function of the Second Kind """
+    return spherical_jn(n,z,derivative)-1j*spherical_yn(n,z,derivative)
+
+def vswf(f, c, tau, l, m, r, theta, phi):
+    # p. 4 in scuffSpherical.pdf
+    # tau = 1 -> "M_lm" -> vsh = X_lm
+    # tau = 2 -> "N_lm" -> vxsh = Z_lm
+    # c = 1 -> regular
+    # c = 3 -> incoming
+    # c = 4 -> outgoing
+
+    c0 = 3e8
+    k = 2*np.pi*f/c0
+
+    if c == 1:
+        rl = spherical_jn
+    elif c == 2:
+        rl = spherical_yn
+    elif c == 3:
+        rl = spherical_hn1
+    elif c == 4:
+        rl = spherical_hn2
+
+    _, vsh_lm_theta, vsh_lm_phi = vec_sph_harm(tau, l, m, theta, phi)
+
+    if tau == 1:
+        rl_res = rl(l, k*r)
+
+        f_theta = rl_res * vsh_lm_theta
+        f_phi = rl_res * vsh_lm_phi
+        f_r = 0
+    elif tau == 2:
+        rl_intermed = rl(l, k*r)/(k*r)
+        rl_res = rl_intermed + rl(l, k*r, derivative=True)
+
+        f_theta = 1j*rl_res * vsh_lm_theta
+        f_phi = 1j*rl_res * vsh_lm_phi
+        f_r = -rl_intermed*np.sqrt(l*(l+1))*my_sph_harm(l, m, theta, phi)
+    else:
+        raise NotImplemented('NIY')
+
+    return f_r, f_theta, f_phi
 
 x, y, z = coord_s2c(1, theta, phi)
 #r, theta, phi = coord_c2s(x, y, z)
@@ -255,9 +302,18 @@ x, y, z = coord_s2c(1, theta, phi)
 
 dA = calc_dA(theta, phi)
 
+print("s=1:")
+print(vswf(1e9, 1, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
+print(vswf(1e9, 4, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
+print(vswf(1e9, 3, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
+print("s=2:")
+print(vswf(1e9, 1, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+print(vswf(1e9, 4, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+print(vswf(1e9, 3, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+
 # test_lpmv_diff_stuff()
 # check_correlation_for_my_sph_harm(theta, phi, dA)
-test_vec_sph_harm()
+#test_vec_sph_harm()
 
 # m, l = 0, 4
 
