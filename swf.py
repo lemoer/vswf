@@ -296,6 +296,47 @@ def vswf(f, c, tau, l, m, r, theta, phi):
 
     return f_r, f_theta, f_phi
 
+def faces(dn, n, da):
+    d1 = np.mod(dn+1, 3) # dimension normal to dn
+    d2 = np.mod(dn+2, 3) # other dimension normal to dn
+
+    min1, max1 = -(n[d1]-1)/2*da, (n[d1]-1)/2
+    min2, max2 = -(n[d2]-1)/2*da, (n[d2]-1)/2
+
+    x1 = np.linspace(min1, max1, n[d1])*da
+    x2 = np.linspace(min2, max2, n[d2])*da
+
+    c1, c2 = np.meshgrid(x1, x2) # coordinates in the face
+
+    xn_p = np.ones_like(c1)*(n[dn]-1)/2*da
+    xn_n = -xn_p
+
+    N = n[d1]*n[d2]
+    r = np.zeros((2*N, 3))
+    r[0:N,d1] = c1.flatten()
+    r[0:N,d2] = c2.flatten()
+    r[0:N,dn] = xn_p.flatten()
+    r[N:2*N,d1] = c1.flatten()
+    r[N:2*N,d2] = c2.flatten()
+    r[N:2*N,dn] = xn_n.flatten()
+
+    dA = np.zeros((2*N,3))
+    dA[0:N,dn] = da**2
+    dA[N:2*N,dn] = -da**2
+
+    return r, dA
+
+def box(n, da):
+    f0 = faces(0, n, da)
+    f1 = faces(1, n, da)
+    f2 = faces(2, n, da)
+    return (
+        np.vstack((f0[0], f1[0], f2[0])), # r
+        np.vstack((f0[1], f1[1], f2[1]))  # dA
+    )
+
+r, dA = box([10,10,10], 0.1)
+
 x, y, z = coord_s2c(1, theta, phi)
 #r, theta, phi = coord_c2s(x, y, z)
 #x, y, z = coord_s2c(1, theta, phi)
