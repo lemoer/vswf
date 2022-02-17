@@ -327,8 +327,8 @@ def face(dn, n, da, sign = 1):
     r[d2, :, :] = c2
     r[dn, :, :] = xn
 
-    dA = np.zeros((n[d2], n[d1], 3))
-    dA[:, :, dn] = da**2
+    dA = np.zeros((3, n[d2], n[d1]))
+    dA[dn, :, :] = da**2
 
     return r, dA
 
