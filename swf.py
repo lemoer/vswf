@@ -332,6 +332,35 @@ def face(dn, n, da, sign = 1):
 
     return r, dA
 
+class EMField:
+    
+    def __init__(self, k, x, y, z):
+        self.k = k
+        self.x = x
+        self.y = y
+        self.z = z
+        self.E_x = None
+        self.E_y = None
+        self.E_z = None
+        self.H_x = None
+        self.H_y = None
+        self.H_z = None
+
+    def override_by_vswf(self, c, tau, l, m):
+        r, theta, phi = coord_c2s(self.x, self.y, self.z)
+
+        f_r, f_theta, f_phi = vswf(self.k, c, tau, l, m, r, theta, phi)
+        f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
+        self.E_x = f_x
+        self.E_y = f_y
+        self.E_z = f_z
+
+        tau_tilde = 2 if tau == 1 else 1
+        f_r, f_theta, f_phi = vswf(k, c, tau_tilde, l, m, r, theta, phi)
+        f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
+        self.H_x = f_x
+        self.H_y = f_y
+        self.H_z = f_z
 
 
 f = 1e9
@@ -342,35 +371,30 @@ c, tau, l, m = 4, 2, 1, 0
 fig = plt.figure(figsize =(14, 9))
 ax = plt.axes(projection ='3d')
 
-max_f_x = None
+faces = []
+max_E_x = None
 
 for dn in range(3):
     for sign in [-1, 1]:
         pos, dA = face(dn, [100, 100, 100], 0.1, sign)
         x, y, z = pos[0,:,:], pos[1,:,:], pos[2,:,:]
 
-        r, theta, phi = coord_c2s(x, y, z)
+        em = EMField(k, x, y, z)
+        em.override_by_vswf(c, tau, l, m)
 
-        f_r, f_theta, f_phi = vswf(k, c, tau, l, m, r, theta, phi)
-        f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
+        faces += [em]
 
-        if not max_f_x or np.abs(f_x).max().max() > np.abs(max_f_x):
-            max_f_x = np.abs(f_x).max().max()
+        if not max_E_x or np.abs(em.E_x).max().max() > np.abs(max_E_x):
+            max_E_x = np.abs(em.E_x).max().max()
 
 
-norm = matplotlib.colors.Normalize(vmin=0, vmax=max_f_x)
+norm = matplotlib.colors.Normalize(vmin=0, vmax=max_E_x)
 
-for dn in range(3):
-    for sign in [-1, 1]:
-        pos, dA = face(dn, [100, 100, 100], 0.1, sign)
-        x, y, z = pos[0,:,:], pos[1,:,:], pos[2,:,:]
-
-        r, theta, phi = coord_c2s(x, y, z)
-
-        f_r, f_theta, f_phi = vswf(k, c, tau, l, m, r, theta, phi)
-        f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
-
-        ax.plot_surface(x, y, z, facecolors=plt.cm.jet(norm(np.abs(f_x))), shade=False)
+for i in range(6):
+    x = faces[i].x
+    y = faces[i].y
+    z = faces[i].z
+    ax.plot_surface(x, y, z, facecolors=plt.cm.jet(norm(np.abs(faces[i].E_x))), shade=False)
 
 # x, y, z = coord_s2c(1, theta, phi)
 #r, theta, phi = coord_c2s(x, y, z)
