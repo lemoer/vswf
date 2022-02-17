@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib
 from matplotlib import cm, colors
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
@@ -256,16 +257,13 @@ def spherical_hn2(n,z,derivative=False):
     """ Spherical Hankel Function of the Second Kind """
     return spherical_jn(n,z,derivative)-1j*spherical_yn(n,z,derivative)
 
-def vswf(f, c, tau, l, m, r, theta, phi):
+def vswf(k, c, tau, l, m, r, theta, phi):
     # p. 4 in scuffSpherical.pdf
     # tau = 1 -> "M_lm" -> vsh = X_lm
     # tau = 2 -> "N_lm" -> vxsh = Z_lm
     # c = 1 -> regular
     # c = 3 -> incoming
     # c = 4 -> outgoing
-
-    c0 = 3e8
-    k = 2*np.pi*f/c0
 
     if c == 1:
         rl = spherical_jn
@@ -296,61 +294,89 @@ def vswf(f, c, tau, l, m, r, theta, phi):
 
     return f_r, f_theta, f_phi
 
-def faces(dn, n, da):
+def test_vswf_values():
+    f = 1e9
+    c0 = 3e8
+    k = 2*np.pi*f/c0
+
+    print("s=1:")
+    print(vswf(k, 1, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
+    print(vswf(k, 4, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
+    print(vswf(k, 3, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
+    print("s=2:")
+    print(vswf(k, 1, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+    print(vswf(k, 4, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+    print(vswf(k, 3, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+
+def face(dn, n, da, sign = 1):
     d1 = np.mod(dn+1, 3) # dimension normal to dn
     d2 = np.mod(dn+2, 3) # other dimension normal to dn
 
-    min1, max1 = -(n[d1]-1)/2*da, (n[d1]-1)/2
-    min2, max2 = -(n[d2]-1)/2*da, (n[d2]-1)/2
+    min1, max1 = -(n[d1]-1)/2, (n[d1]-1)/2
+    min2, max2 = -(n[d2]-1)/2, (n[d2]-1)/2
 
     x1 = np.linspace(min1, max1, n[d1])*da
     x2 = np.linspace(min2, max2, n[d2])*da
 
     c1, c2 = np.meshgrid(x1, x2) # coordinates in the face
 
-    xn_p = np.ones_like(c1)*(n[dn]-1)/2*da
-    xn_n = -xn_p
+    xn = sign*np.ones_like(c1)*(n[dn]-1)/2*da
 
-    N = n[d1]*n[d2]
-    r = np.zeros((2*N, 3))
-    r[0:N,d1] = c1.flatten()
-    r[0:N,d2] = c2.flatten()
-    r[0:N,dn] = xn_p.flatten()
-    r[N:2*N,d1] = c1.flatten()
-    r[N:2*N,d2] = c2.flatten()
-    r[N:2*N,dn] = xn_n.flatten()
+    r = np.zeros((3, n[d2], n[d1]))
+    r[d1, :, :] = c1
+    r[d2, :, :] = c2
+    r[dn, :, :] = xn
 
-    dA = np.zeros((2*N,3))
-    dA[0:N,dn] = da**2
-    dA[N:2*N,dn] = -da**2
+    dA = np.zeros((n[d2], n[d1], 3))
+    dA[:, :, dn] = da**2
 
     return r, dA
 
-def box(n, da):
-    f0 = faces(0, n, da)
-    f1 = faces(1, n, da)
-    f2 = faces(2, n, da)
-    return (
-        np.vstack((f0[0], f1[0], f2[0])), # r
-        np.vstack((f0[1], f1[1], f2[1]))  # dA
-    )
 
-r, dA = box([10,10,10], 0.1)
 
-x, y, z = coord_s2c(1, theta, phi)
+f = 1e9
+c0 = 3e8
+k = 2*np.pi*f/c0
+c, tau, l, m = 4, 2, 1, 0
+
+fig = plt.figure(figsize =(14, 9))
+ax = plt.axes(projection ='3d')
+
+max_f_x = None
+
+for dn in range(3):
+    for sign in [-1, 1]:
+        pos, dA = face(dn, [100, 100, 100], 0.1, sign)
+        x, y, z = pos[0,:,:], pos[1,:,:], pos[2,:,:]
+
+        r, theta, phi = coord_c2s(x, y, z)
+
+        f_r, f_theta, f_phi = vswf(k, c, tau, l, m, r, theta, phi)
+        f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
+
+        if not max_f_x or np.abs(f_x).max().max() > np.abs(max_f_x):
+            max_f_x = np.abs(f_x).max().max()
+
+
+norm = matplotlib.colors.Normalize(vmin=0, vmax=max_f_x)
+
+for dn in range(3):
+    for sign in [-1, 1]:
+        pos, dA = face(dn, [100, 100, 100], 0.1, sign)
+        x, y, z = pos[0,:,:], pos[1,:,:], pos[2,:,:]
+
+        r, theta, phi = coord_c2s(x, y, z)
+
+        f_r, f_theta, f_phi = vswf(k, c, tau, l, m, r, theta, phi)
+        f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
+
+        ax.plot_surface(x, y, z, facecolors=plt.cm.jet(norm(np.abs(f_x))), shade=False)
+
+# x, y, z = coord_s2c(1, theta, phi)
 #r, theta, phi = coord_c2s(x, y, z)
 #x, y, z = coord_s2c(1, theta, phi)
 
-dA = calc_dA(theta, phi)
-
-print("s=1:")
-print(vswf(1e9, 1, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
-print(vswf(1e9, 4, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
-print(vswf(1e9, 3, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
-print("s=2:")
-print(vswf(1e9, 1, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
-print(vswf(1e9, 4, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
-print(vswf(1e9, 3, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+# dA = calc_dA(theta, phi)
 
 # test_lpmv_diff_stuff()
 # check_correlation_for_my_sph_harm(theta, phi, dA)
