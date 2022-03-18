@@ -347,19 +347,23 @@ class EMField:
         f_r, f_theta, f_phi = vswf(self.k, c, tau, l, m, r, theta, phi)
         f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
 
+        eta = 120*np.pi
+
         self.E = np.zeros(dtype='complex128', shape=(3, np.size(f_x,0), np.size(f_x,1)))
-        self.E[0, :, :] = f_x
-        self.E[1, :, :] = f_y
-        self.E[2, :, :] = f_z
+        factor = k*np.sqrt(eta)/np.sqrt(2)
+        self.E[0, :, :] = factor*f_x
+        self.E[1, :, :] = factor*f_y
+        self.E[2, :, :] = factor*f_z
         
         tau_tilde = 2 if tau == 1 else 1
         f_r, f_theta, f_phi = vswf(k, c, tau_tilde, l, m, r, theta, phi)
         f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
         
         self.H = np.zeros(dtype='complex128', shape=(3, np.size(f_x,0), np.size(f_x,1)))
-        self.H[0, :, :] = f_x
-        self.H[1, :, :] = f_y
-        self.H[2, :, :] = f_z
+        factor = 1j*k/np.sqrt(eta)/np.sqrt(2)
+        self.H[0, :, :] = factor*f_x
+        self.H[1, :, :] = factor*f_y
+        self.H[2, :, :] = factor*f_z
 
 f = 1e9
 c0 = 3e8
