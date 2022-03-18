@@ -1,13 +1,5 @@
-import matplotlib.pyplot as plt
-import matplotlib
-from matplotlib import cm, colors
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy.special import sph_harm, factorial, lpmv, spherical_jn, spherical_yn
-
-phi = np.linspace(0, 2*np.pi, 100)
-theta = np.linspace(0, np.pi, 50)
-theta, phi = np.meshgrid(theta, phi)
 
 def coord_s2c(r, theta, phi):
     x = r * np.sin(theta) * np.cos(phi)
@@ -336,6 +328,7 @@ class EMField:
     
     def __init__(self, k, pos, dA):
         self.k = k
+        self.eta = 120*np.pi
         self.pos = pos
         self.dA = dA
         self.E = None
@@ -347,101 +340,18 @@ class EMField:
         f_r, f_theta, f_phi = vswf(self.k, c, tau, l, m, r, theta, phi)
         f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
 
-        eta = 120*np.pi
-
         self.E = np.zeros(dtype='complex128', shape=(3, np.size(f_x,0), np.size(f_x,1)))
-        factor = k*np.sqrt(eta)/np.sqrt(2)
+        factor = self.k*np.sqrt(self.eta)/np.sqrt(2)
         self.E[0, :, :] = factor*f_x
         self.E[1, :, :] = factor*f_y
         self.E[2, :, :] = factor*f_z
         
         tau_tilde = 2 if tau == 1 else 1
-        f_r, f_theta, f_phi = vswf(k, c, tau_tilde, l, m, r, theta, phi)
+        f_r, f_theta, f_phi = vswf(self.k, c, tau_tilde, l, m, r, theta, phi)
         f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
         
         self.H = np.zeros(dtype='complex128', shape=(3, np.size(f_x,0), np.size(f_x,1)))
-        factor = 1j*k/np.sqrt(eta)/np.sqrt(2)
+        factor = 1j*self.k/np.sqrt(self.eta)/np.sqrt(2)
         self.H[0, :, :] = factor*f_x
         self.H[1, :, :] = factor*f_y
         self.H[2, :, :] = factor*f_z
-
-f = 1e9
-c0 = 3e8
-k = 2*np.pi*f/c0
-c, tau, l, m = 4, 2, 1, 0
-
-fig = plt.figure(figsize =(14, 9))
-ax = plt.axes(projection ='3d')
-
-faces = []
-faces2 = []
-max_E_x = None
-
-for dn in range(3):
-    for sign in [-1, 1]:
-        pos, dA = face(dn, [100, 100, 100], 0.1, sign)
-        x, y, z = pos[0,:,:], pos[1,:,:], pos[2,:,:]
-
-        em = EMField(k, pos, dA)
-        em.override_by_vswf(c, tau, l, m)
-        faces += [em]
-
-        em = EMField(k, pos, dA)
-        em.override_by_vswf(c, tau, l, m+1)
-        faces2 += [em]
-
-        if not max_E_x or np.abs(em.E[0,:,:]).max().max() > np.abs(max_E_x):
-            max_E_x = np.abs(em.E[0,:,:]).max().max()
-
-res_ab = 0
-res_aa = 0
-res_bb = 0
-
-for i in range(6):
-    a = faces[i]
-    b = faces2[i]
-
-    res_ab += np.sum((a.H.conj()*b.E - b.H.conj() * a.E)*a.dA)
-    res_aa += np.sum((a.H.conj()*a.E - a.H.conj() * a.E)*a.dA)
-    res_bb += np.sum((a.H.conj()*a.E - a.H.conj() * a.E)*a.dA)
-
-print('res_aa:', res_aa)
-print('res_ab:', res_ab)
-print('res_bb:', res_bb)
-
-norm = matplotlib.colors.Normalize(vmin=0, vmax=max_E_x)
-
-for i in range(6):
-    x = faces[i].pos[0, :, :]
-    y = faces[i].pos[1, :, :]
-    z = faces[i].pos[2, :, :]
-    ax.plot_surface(x, y, z, facecolors=plt.cm.jet(norm(np.abs(faces2[i].E[0,:,:]))), shade=False)
-
-# x, y, z = coord_s2c(1, theta, phi)
-#r, theta, phi = coord_c2s(x, y, z)
-#x, y, z = coord_s2c(1, theta, phi)
-
-# dA = calc_dA(theta, phi)
-
-# test_lpmv_diff_stuff()
-# check_correlation_for_my_sph_harm(theta, phi, dA)
-#test_vec_sph_harm()
-
-# m, l = 0, 4
-
-# # Calculate the spherical harmonic Y(l,m) and normalize to [0,1]
-# # Be cationous, sph_harm takes other args! 
-# #fcolors = sph_harm(m, l, phi, theta).real
-# fcolors = my_sph_harm(l, m, theta, phi).real
-# fmax, fmin = fcolors.max(), fcolors.min()
-# fcolors = (fcolors - fmin)/(fmax - fmin)
-
-# # Set the aspect ratio to 1 so our sphere looks spherical
-# fig = plt.figure(figsize=plt.figaspect(1.))
-# ax = fig.add_subplot(111, projection='3d')
-# ax.plot_surface(x, y, z,  rstride=1, cstride=1, facecolors=cm.seismic(fcolors))
-# # Turn off the axis planes
-# ax.set_axis_off()
-# plt.show()
-
-print("end")
