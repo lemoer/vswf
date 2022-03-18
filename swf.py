@@ -274,7 +274,7 @@ def vswf(k, c, tau, l, m, r, theta, phi):
     elif c == 4:
         rl = spherical_hn2
 
-    _, vsh_lm_theta, vsh_lm_phi = vec_sph_harm(tau, l, m, theta, phi)
+    _, vsh_lm_theta, vsh_lm_phi = vec_sph_harm(tau, l, m, theta, phi) # This is either called Xlm or Zlm (depending on tau)
 
     if tau == 1:
         rl_res = rl(l, k*r)
@@ -286,9 +286,9 @@ def vswf(k, c, tau, l, m, r, theta, phi):
         rl_intermed = rl(l, k*r)/(k*r)
         rl_res = rl_intermed + rl(l, k*r, derivative=True)
 
-        f_theta = 1j*rl_res * vsh_lm_theta
-        f_phi = 1j*rl_res * vsh_lm_phi
-        f_r = -rl_intermed*np.sqrt(l*(l+1))*my_sph_harm(l, m, theta, phi)
+        f_theta = 1*rl_res * vsh_lm_theta
+        f_phi = 1*rl_res * vsh_lm_phi
+        f_r = rl_intermed*np.sqrt(l*(l+1))*my_sph_harm(l, m, theta, phi)
     else:
         raise NotImplemented('NIY')
 
