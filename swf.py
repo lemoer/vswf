@@ -334,34 +334,32 @@ def face(dn, n, da, sign = 1):
 
 class EMField:
     
-    def __init__(self, k, x, y, z):
+    def __init__(self, k, pos, dA):
         self.k = k
-        self.x = x
-        self.y = y
-        self.z = z
-        self.E_x = None
-        self.E_y = None
-        self.E_z = None
-        self.H_x = None
-        self.H_y = None
-        self.H_z = None
+        self.pos = pos
+        self.dA = dA
+        self.E = None
+        self.H = None
 
     def override_by_vswf(self, c, tau, l, m):
-        r, theta, phi = coord_c2s(self.x, self.y, self.z)
+        r, theta, phi = coord_c2s(self.pos[0,:,:], self.pos[1,:,:], self.pos[2,:,:])
 
         f_r, f_theta, f_phi = vswf(self.k, c, tau, l, m, r, theta, phi)
         f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
-        self.E_x = f_x
-        self.E_y = f_y
-        self.E_z = f_z
 
+        self.E = np.zeros(dtype='complex128', shape=(3, np.size(f_x,0), np.size(f_x,1)))
+        self.E[0, :, :] = f_x
+        self.E[1, :, :] = f_y
+        self.E[2, :, :] = f_z
+        
         tau_tilde = 2 if tau == 1 else 1
         f_r, f_theta, f_phi = vswf(k, c, tau_tilde, l, m, r, theta, phi)
         f_x, f_y, f_z = vec_s2c(f_r, f_theta, f_phi, r, theta, phi)
-        self.H_x = f_x
-        self.H_y = f_y
-        self.H_z = f_z
-
+        
+        self.H = np.zeros(dtype='complex128', shape=(3, np.size(f_x,0), np.size(f_x,1)))
+        self.H[0, :, :] = f_x
+        self.H[1, :, :] = f_y
+        self.H[2, :, :] = f_z
 
 f = 1e9
 c0 = 3e8
@@ -372,6 +370,7 @@ fig = plt.figure(figsize =(14, 9))
 ax = plt.axes(projection ='3d')
 
 faces = []
+faces2 = []
 max_E_x = None
 
 for dn in range(3):
@@ -379,22 +378,40 @@ for dn in range(3):
         pos, dA = face(dn, [100, 100, 100], 0.1, sign)
         x, y, z = pos[0,:,:], pos[1,:,:], pos[2,:,:]
 
-        em = EMField(k, x, y, z)
+        em = EMField(k, pos, dA)
         em.override_by_vswf(c, tau, l, m)
-
         faces += [em]
 
-        if not max_E_x or np.abs(em.E_x).max().max() > np.abs(max_E_x):
-            max_E_x = np.abs(em.E_x).max().max()
+        em = EMField(k, pos, dA)
+        em.override_by_vswf(c, tau, l, m+1)
+        faces2 += [em]
 
+        if not max_E_x or np.abs(em.E[0,:,:]).max().max() > np.abs(max_E_x):
+            max_E_x = np.abs(em.E[0,:,:]).max().max()
+
+res_ab = 0
+res_aa = 0
+res_bb = 0
+
+for i in range(6):
+    a = faces[i]
+    b = faces2[i]
+
+    res_ab += np.sum((a.H.conj()*b.E - b.H.conj() * a.E)*a.dA)
+    res_aa += np.sum((a.H.conj()*a.E - a.H.conj() * a.E)*a.dA)
+    res_bb += np.sum((a.H.conj()*a.E - a.H.conj() * a.E)*a.dA)
+
+print('res_aa:', res_aa)
+print('res_ab:', res_ab)
+print('res_bb:', res_bb)
 
 norm = matplotlib.colors.Normalize(vmin=0, vmax=max_E_x)
 
 for i in range(6):
-    x = faces[i].x
-    y = faces[i].y
-    z = faces[i].z
-    ax.plot_surface(x, y, z, facecolors=plt.cm.jet(norm(np.abs(faces[i].E_x))), shade=False)
+    x = faces[i].pos[0, :, :]
+    y = faces[i].pos[1, :, :]
+    z = faces[i].pos[2, :, :]
+    ax.plot_surface(x, y, z, facecolors=plt.cm.jet(norm(np.abs(faces2[i].E[0,:,:]))), shade=False)
 
 # x, y, z = coord_s2c(1, theta, phi)
 #r, theta, phi = coord_c2s(x, y, z)
