@@ -43,20 +43,6 @@ def vec_c2s(f_x, f_y, f_z, r, theta, phi):
 
     return f_r, f_theta, f_phi
 
-## Tests for vector transformation...
-# F = np.ones_like(phi)
-# nul = np.zeros_like(phi)
-
-# F_r, F_theta, F_phi = vec_c2s(F, nul, F, 1, theta, phi)
-# F_x, F_y, F_z = vec_s2c(F_r, F_theta, F_phi, 1, theta, phi)
-
-# plt.figure()
-# plt.plot(F_x)
-# plt.figure()
-# plt.plot(F_y)
-# plt.figure()
-# plt.plot(F_z)
-
 def my_sph_harm(l, m, theta, phi):
     # This is a copy of sph_harm() with different argument order based
     # on Kristenson, p. 95. It has been validated for some examples,
@@ -73,20 +59,6 @@ def my_sph_harm(l, m, theta, phi):
     leg_part = lpmv(m, l, np.cos(theta))
 
     return c_lm*exp_part*leg_part
-
-# Check my_sph_harm() as 1d fun...
-# l, m = 4, 2
-# # phi = np.pi/4
-# # theta = np.linspace(0, np.pi, 100)
-# phi = np.linspace(0, 2*np.pi, 100)
-# theta = np.pi/4
-
-# ref = sph_harm(m, l, phi, theta).imag
-# my = my_sph_harm(l, m, theta, phi).imag
-
-# plt.figure()
-# plt.plot(phi*180/np.pi, ref)
-# p = plt.plot(phi*180/np.pi, my, linestyle='--')
 
 def sph_harm_diff_phi(l, m, theta, phi):
     # differentation of my_sph_harm() w.r.t. phi (with conventions
