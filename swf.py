@@ -103,7 +103,7 @@ def lpmv_diff_times_minus_sqrt_1_minus_x_squared(m, l, x):
     # can be used directly to calculate the derivative. See test_lpmv_diff_stuff().
     return -(1/2)*((l-m+1)*(l+m)*lpmv(m-1, l, x)-lpmv(m+1, l, x)) # grundmann
 
-def test_lpmv_diff_stuff():
+def __mytest_lpmv_diff_stuff():
     plt.figure()
     theta = np.linspace(0, np.pi, 50)
     dtheta = theta[1] - theta[0]
@@ -176,33 +176,7 @@ def calc_dA(theta, phi):
     dphi = fix_dim(np.diff(phi, axis=0), axis=0)
     return dtheta * dphi * np.sin(theta)
 
-def check_correlation_for_my_sph_harm(theta, phi, dA):
-    m = 0
-    L = 10
-    C = np.zeros((L, L), dtype=complex)
-
-    # make arrays 1D, so we can use the dot() properly.
-    theta = np.ravel(theta)
-    phi = np.ravel(phi)
-    dA = np.ravel(dA)
-
-    # do the work
-    for l in range(1, L+1):
-        for l2 in range(1, L+1):
-            f1 = my_sph_harm(l, m, theta, phi)
-            f2 = my_sph_harm(l2, m, theta, phi)
-            # f1 = sph_harm(m, l, phi, theta)
-            # f2 = sph_harm(m, l2, phi, theta)
-            
-            C[l-1, l2-1] = np.dot(f2.conj(), dA*f1)
-
-    plt.figure()
-    plt.imshow(np.abs(C))
-    plt.colorbar()
-
-    return C, f1, f2
-
-def test_correlation_for_vec_sph_harm(theta, phi, dA, tau1, tau2, m1, m2):
+def __mytest_correlation_for_vec_sph_harm(theta, phi, dA, tau1, tau2, m1, m2):
     L = 10
     C = np.zeros((L, L), dtype=complex)
 
@@ -227,7 +201,7 @@ def test_correlation_for_vec_sph_harm(theta, phi, dA, tau1, tau2, m1, m2):
 
     return C
 
-def test_vec_sph_harm():
+def __mytest_vec_sph_harm():
     test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 1, 1, 1)
     test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 1, 0, 1)
     test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 2, 1, 1)
@@ -286,7 +260,7 @@ def vswf(k, c, tau, l, m, r, theta, phi):
 
     return f_r, f_theta, f_phi
 
-def test_vswf_values():
+def __mytest_vswf_values():
     f = 1e9
     c0 = 3e8
     k = 2*np.pi*f/c0
