@@ -43,5 +43,6 @@ def test_it():
         plt.figure()
         plt.imshow(np.abs(C))
         plt.colorbar()
+        plt.show(block=True)
 
 test_it()

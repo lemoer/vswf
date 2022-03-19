@@ -177,45 +177,6 @@ def calc_dA(theta, phi):
     dphi = __fix_dim(np.diff(phi, axis=0), axis=0)
     return dtheta * dphi * np.sin(theta)
 
-def __mytest_correlation_for_vec_sph_harm(theta, phi, dA, tau1, tau2, m1, m2):
-    L = 10
-    C = np.zeros((L, L), dtype=complex)
-
-    # make arrays 1D, so we can use the dot() properly.
-    theta = np.ravel(theta)
-    phi = np.ravel(phi)
-    dA = np.ravel(dA)
-
-    # do the work
-    for l in range(1, L+1):
-        for l2 in range(1, L+1):
-            f1_r, f1_th, f1_ph = vec_sph_harm(tau1, l, m1, theta, phi)
-            f2_r, f2_th, f2_ph = vec_sph_harm(tau2, l2, m2, theta, phi)
-            
-            C[l-1, l2-1] = np.sum(f2_r.conj()*dA*f1_r) + np.sum(f2_th.conj()*dA*f1_th) + np.sum(f2_ph.conj()*dA*f1_ph)
-
-    plt.figure()
-    plt.imshow(np.abs(C))
-    plt.colorbar()
-    plt.title(f"$\\tau_1 = {tau1}, \\tau_2 = {tau2}, m_1 = {m1}, m_2 = {m2}$")
-    # plt.clim([0, 1])
-
-    return C
-
-def __mytest_vec_sph_harm():
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 1, 1, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 1, 0, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 2, 1, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 2, 0, 0)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 2, 0, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 2, 1, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 2, 1, 0)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 2, 0, 0)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 3, 1, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 1, 3, 0, 0)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 3, 1, 1)
-    test_correlation_for_vec_sph_harm(theta, phi, dA, 2, 3, 0, 0)
-
 def spherical_hn1(n,z,derivative=False):
     """ Spherical Hankel Function of the First Kind """
     return spherical_jn(n,z,derivative)+1j*spherical_yn(n,z,derivative)
