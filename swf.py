@@ -103,25 +103,6 @@ def lpmv_diff_times_minus_sqrt_1_minus_x_squared(m, l, x):
     # can be used directly to calculate the derivative. See test_lpmv_diff_stuff().
     return -(1/2)*((l-m+1)*(l+m)*lpmv(m-1, l, x)-lpmv(m+1, l, x)) # grundmann
 
-def __mytest_lpmv_diff_stuff():
-    plt.figure()
-    theta = np.linspace(0, np.pi, 50)
-    dtheta = theta[1] - theta[0]
-
-    # theta values in between the original values ("half-step")
-    theta_ = np.convolve(theta, [0.5, 0.5], 'valid')
-    
-    for l in range(3, 4):
-        m = 1
-        leg_part = lpmv(m, l, np.cos(theta))
-        leg_diff_analytic = lpmv_diff_times_minus_sqrt_1_minus_x_squared(m, l, np.cos(theta))
-        leg_diff_numeric = np.diff(leg_part)/dtheta
-
-        plt.plot(theta, leg_part)
-        # The following two graphs should be equal
-        plt.plot(theta, leg_diff_analytic)
-        plt.plot(theta_, leg_diff_numeric, ':')
-
 def sph_harm_diff_theta(l, m, theta, phi):
     # we leave out the (-1)**m here in c_lm, because it is already
     # part of the legendre definition in lpmv(). 
