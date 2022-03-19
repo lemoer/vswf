@@ -160,20 +160,21 @@ def vec_sph_harm(tau, l, m, theta, phi):
 
     return f_r, f_theta, f_phi
 
-def fix_dim(A, axis):
+def __fix_dim(A, axis):
     # Repeats the last column or row of a matrix once, so the dimension
-    # in that axis is increased by 1.
+    # in that axis is increased by 1. This is useful in combination with
+    # np.diff() as np.diff() reduces the size of an array.
     if axis == 0:
         return np.append(A, np.reshape(A[-1,:], (1, A.shape[1])), 0)
     elif axis == 1:
         return np.append(A, np.reshape(A[:,-1], (A.shape[0], 1)), 1)
     else:
-        raise Exception('fix_dim() is not implemented for axes > 1!')
+        raise Exception('__fix_dim() is not implemented for axes > 1!')
 
 def calc_dA(theta, phi):
     assert theta[0,0] == theta[1,0], 'Grid direction is not as expected!'
-    dtheta = fix_dim(np.diff(theta, axis=1), axis=1)
-    dphi = fix_dim(np.diff(phi, axis=0), axis=0)
+    dtheta = __fix_dim(np.diff(theta, axis=1), axis=1)
+    dphi = __fix_dim(np.diff(phi, axis=0), axis=0)
     return dtheta * dphi * np.sin(theta)
 
 def __mytest_correlation_for_vec_sph_harm(theta, phi, dA, tau1, tau2, m1, m2):
