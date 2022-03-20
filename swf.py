@@ -162,7 +162,7 @@ def vswf(k, c, tau, l, m, r, theta, phi):
 
         f_theta = rl_res * vsh_lm_theta
         f_phi = rl_res * vsh_lm_phi
-        f_r = 0
+        f_r = np.zeros(f_phi.shape)
     elif tau == 2:
         rl_intermed = rl(l, k*r)/(k*r)
         rl_res = rl_intermed + rl(l, k*r, derivative=True)
@@ -174,20 +174,7 @@ def vswf(k, c, tau, l, m, r, theta, phi):
         raise NotImplemented('NIY')
 
     return f_r, f_theta, f_phi
-
-def __mytest_vswf_values():
-    f = 1e9
-    c0 = 3e8
-    k = 2*np.pi*f/c0
-
-    print("s=1:")
-    print(vswf(k, 1, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
-    print(vswf(k, 4, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
-    print(vswf(k, 3, 1, 1, 1, np.array([1]), np.array([0]), np.array([0])))
-    print("s=2:")
-    print(vswf(k, 1, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
-    print(vswf(k, 4, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
-    print(vswf(k, 3, 2, 1, 1, np.array([1]), np.array([np.pi/2]), np.array([0])))
+    
 
 def face(dn, n, da, sign = 1):
     d1 = np.mod(dn+1, 3) # dimension normal to dn
