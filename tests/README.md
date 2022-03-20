@@ -1,6 +1,11 @@
 
 ```tests/test_lpmv_diff.py```:
 
+This test compares the implementation of ```lpmv_diff_times_minus_sqrt_1_minus_x_squared()``` with a numerical derivative of ``lpmv()``.
+
+The function ```lpmv_diff_times_minus_sqrt_1_minus_x_squared()``` is defined by:
+<img src="https://render.githubusercontent.com/render/math?math=-%5Csqrt%7B1-x%5E2%7D%5C%2C%20%5Cfrac%7B%5Cmathrm%7Bd%7D%7D%7B%5Cmathrm%7Bd%7Dx%7D%20%5C%2C%20P_%7Bl%7D%5Em%28x%29#gh-light-mode-only"> 
+<img src="https://render.githubusercontent.com/render/math?math=\color{white}-%5Csqrt%7B1-x%5E2%7D%5C%2C%20%5Cfrac%7B%5Cmathrm%7Bd%7D%7D%7B%5Cmathrm%7Bd%7Dx%7D%20%5C%2C%20P_%7Bl%7D%5Em%28x%29#gh-light-mode-only#gh-dark-mode-only">
 
 
 ```tests/test_vswf_values```:
