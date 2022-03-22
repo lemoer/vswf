@@ -39,6 +39,7 @@ P_conv = P_conv[:, np.newaxis]*window_col # This additional windowing is in orde
 P_int = -1j*np.cumsum(P)*dt
 P_int = P_int[:, np.newaxis]
 
+# This is the analytical solution of the integral of P
 P_ana = -1j*(eval_legendre(l+1, t_col) - eval_legendre(l-1, t_col))/(2*l+1)*window_col
 
 FT = np.matrix(np.exp(1j*t_row*x_col)) * dt # fourier transform
