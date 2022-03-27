@@ -12,8 +12,10 @@ from scipy.special import lpmv, spherical_jn, spherical_yn, eval_legendre
 
 l = 1
 
-T_MAX = 2
-NT = 1000 # The higher this time is, the better the approximations of the P at the origin become. (Probably aliasing)
+T_MAX = 3 # seems like, this must be at least a, in order to deliver correct results (Probably aliasing)
+NT = 1000 # The higher this is, the better the approximations of the P at the origin become. (Probably aliasing)
+
+a = 3
 
 x = np.linspace(0, 100*np.pi, 1000)
 t = np.linspace(-T_MAX, T_MAX, NT) # The larger T_MAX becomes, the worse the error in the bessel function for large x
@@ -23,14 +25,14 @@ t_row = t[np.newaxis, :]
 t_col = t[:, np.newaxis]
 x_col = x[:, np.newaxis]
 window_col = np.ones(t_col.shape)
-window_col[np.abs(t) > 1] = 0
+window_col[np.abs(t/a) > 1] = 0
 dt = t[1] - t[0]
 
-J = spherical_jn(l, x)
-J_by_x = spherical_jn(l, x)/x
-P = eval_legendre(l, t_col) * window_col
+J = spherical_jn(l, a*x)
+J_by_x = spherical_jn(l, a*x)/(a*x)
+P = 1/a*eval_legendre(l, t_col/a) * window_col
 # This is the analytical solution of the integral of P
-P_integral_ana = -1j*(eval_legendre(l+1, t_col) - eval_legendre(l-1, t_col))/(2*l+1)*window_col
+P_integral_ana = -1j/a*(eval_legendre(l+1, t_col/a) - eval_legendre(l-1, t_col/a))/(2*l+1)*window_col
 
 FT = np.matrix(np.exp(1j*t_row*x_col)) * dt # fourier transform
 
@@ -52,8 +54,7 @@ ax2.plot(x, J_by_x)
 ax2.plot(x, np.real(J_by_x_integral_repr), '--')
 ax2.plot(x, np.imag(J_by_x_integral_repr))
 
-plt.show(block=True)
-
 plt.figure()
 plt.plot(t, P)
 plt.plot(t, np.imag(P_integral_ana))
+plt.show(block=True)
