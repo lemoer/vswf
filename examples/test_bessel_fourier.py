@@ -30,21 +30,24 @@ dt = t[1] - t[0]
 
 J = spherical_jn(l, a*x)
 J_by_x = spherical_jn(l, a*x)/(a*x)
+J_deriv = spherical_jn(l, a*x, derivative=True)
 P = 1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * window_col
 # This is the analytical solution of the integral of P
 P_integral_ana = -1/(2*(1j**l))*1j/a*(eval_legendre(l+1, t_col/a) - eval_legendre(l-1, t_col/a))/(2*l+1)*window_col
+P_times_t = 1j*(t_col/a)*1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * window_col
 
 FT = np.matrix(np.exp(1j*t_row*x_col)) * dt # fourier transform
 
 J_integral_repr = FT*P
 J_by_x_integral_repr = FT*P_integral_ana
+J_deriv_integral_repr = FT*P_times_t
 
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib import cm, colors
 from mpl_toolkits.mplot3d import Axes3D
 
-f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+f, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
 
 ax1.plot(x, J)
 ax1.plot(x, np.real(J_integral_repr), '--')
@@ -54,7 +57,13 @@ ax2.plot(x, J_by_x)
 ax2.plot(x, np.real(J_by_x_integral_repr), '--')
 ax2.plot(x, np.imag(J_by_x_integral_repr))
 
+ax3.plot(x, J_deriv)
+ax3.plot(x, np.real(J_deriv_integral_repr), '--')
+ax3.plot(x, np.imag(J_deriv_integral_repr))
+
+
 plt.figure()
 plt.plot(t, np.abs(P))
 plt.plot(t, np.abs(P_integral_ana))
+plt.plot(t, np.abs(P_times_t))
 plt.show(block=True)
