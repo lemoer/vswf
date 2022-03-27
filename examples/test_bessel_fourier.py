@@ -30,14 +30,14 @@ dt = t[1] - t[0]
 
 J = spherical_jn(l, a*x)
 J_by_x = spherical_jn(l, a*x)/(a*x)
-P = 1/a*eval_legendre(l, t_col/a) * window_col
+P = 1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * window_col
 # This is the analytical solution of the integral of P
-P_integral_ana = -1j/a*(eval_legendre(l+1, t_col/a) - eval_legendre(l-1, t_col/a))/(2*l+1)*window_col
+P_integral_ana = -1/(2*(1j**l))*1j/a*(eval_legendre(l+1, t_col/a) - eval_legendre(l-1, t_col/a))/(2*l+1)*window_col
 
 FT = np.matrix(np.exp(1j*t_row*x_col)) * dt # fourier transform
 
-J_integral_repr = 1/(2*(1j**l))*FT*P
-J_by_x_integral_repr = 1/(2*(1j**l))*FT*P_integral_ana
+J_integral_repr = FT*P
+J_by_x_integral_repr = FT*P_integral_ana
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -55,6 +55,6 @@ ax2.plot(x, np.real(J_by_x_integral_repr), '--')
 ax2.plot(x, np.imag(J_by_x_integral_repr))
 
 plt.figure()
-plt.plot(t, P)
-plt.plot(t, np.imag(P_integral_ana))
+plt.plot(t, np.abs(P))
+plt.plot(t, np.abs(P_integral_ana))
 plt.show(block=True)
