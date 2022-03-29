@@ -24,18 +24,17 @@ t = np.linspace(-T_MAX, T_MAX, NT) # The larger T_MAX becomes, the worse the err
 t_row = t[np.newaxis, :]
 t_col = t[:, np.newaxis]
 x_col = x[:, np.newaxis]
-window_col = np.ones(t_col.shape)
-window_col[np.abs(t/a) > 1] = 0
+boxcar = lambda x: np.heaviside(x+1, 0.5)-np.heaviside(x-1, 0.5)
 dt = t[1] - t[0]
 dx = x[1] - x[0]
 
 J = spherical_jn(l, a*x)
 J_by_x = spherical_jn(l, a*x)/(a*x)
 J_deriv = spherical_jn(l, a*x, derivative=True)
-P = 1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * window_col
+P = 1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * boxcar(t_col/a)
 # This is the analytical solution of the integral of P
-P_integral_ana = -1/(2*(1j**l))*1j/a*(eval_legendre(l+1, t_col/a) - eval_legendre(l-1, t_col/a))/(2*l+1)*window_col
-P_times_t = 1j*(t_col/a)*1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * window_col
+P_integral_ana = -1/(2*(1j**l))*1j/a*(eval_legendre(l+1, t_col/a) - eval_legendre(l-1, t_col/a))/(2*l+1)*boxcar(t_col/a)
+P_times_t = 1j*(t_col/a)*1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * boxcar(t_col/a)
 
 FT = np.matrix(np.exp(1j*t_row*x_col)) * dt # fourier transform
 IFT = 1/np.pi*np.matrix(np.exp(1j*x_col.T*t_row.T)) * dx # fourier transform
