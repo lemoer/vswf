@@ -27,6 +27,7 @@ x_col = x[:, np.newaxis]
 window_col = np.ones(t_col.shape)
 window_col[np.abs(t/a) > 1] = 0
 dt = t[1] - t[0]
+dx = x[1] - x[0]
 
 J = spherical_jn(l, a*x)
 J_by_x = spherical_jn(l, a*x)/(a*x)
@@ -37,6 +38,7 @@ P_integral_ana = -1/(2*(1j**l))*1j/a*(eval_legendre(l+1, t_col/a) - eval_legendr
 P_times_t = 1j*(t_col/a)*1/(2*(1j**l))/a*eval_legendre(l, t_col/a) * window_col
 
 FT = np.matrix(np.exp(1j*t_row*x_col)) * dt # fourier transform
+IFT = 1/np.pi*np.matrix(np.exp(1j*x_col.T*t_row.T)) * dx # fourier transform
 
 J_integral_repr = FT*P
 J_by_x_integral_repr = FT*P_integral_ana
@@ -63,7 +65,21 @@ ax3.plot(x, np.imag(J_deriv_integral_repr))
 
 
 plt.figure()
-plt.plot(t, np.abs(P))
-plt.plot(t, np.abs(P_integral_ana))
-plt.plot(t, np.abs(P_times_t))
+
+if np.mod(l, 2) == 0:
+    part = lambda x: np.real(x)
+    part_str = "Re "
+    part_other = lambda x: np.imag(x)
+    part_other_str = "Im "
+else:
+    part = lambda x: np.imag(x)
+    part_str = "Im "
+    part_other = lambda x: np.real(x)
+    part_other_str = "Re "
+
+plt.plot(t, part(P), label=part_str + "P")
+plt.plot(t, part(IFT*J[:,np.newaxis]), label="FT J")
+plt.plot(t, part_other(P_integral_ana), label=part_other_str + "P_{integral}|")
+plt.plot(t, part_other(P_times_t), label=part_other_str + "t*P")
+plt.legend()
 plt.show(block=True)
