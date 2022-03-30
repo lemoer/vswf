@@ -192,19 +192,21 @@ def vswf_time_domain(t, c, tau, l, m, r, theta, phi):
 
     boxcar = lambda x: np.heaviside(x+1, 0.5)-np.heaviside(x-1, 0.5)
 
+    c0 = 299792458 # speed of light
+    a = r/c0 # scaling factor
+    # k*r = omega*a
     if tau == 1:
-        c0 = 3e8
-
-        a = r/c0
+        # Frequency domain: rl_res = rl(l, omega*a)
         rl_res = 1/(2*(1j**l))/a*eval_legendre(l, t/a) * boxcar(t/a)
-        # rl_res = rl(l, omega*r/c0)
 
         f_theta = rl_res * vsh_lm_theta
         f_phi = rl_res * vsh_lm_phi
         f_r = np.zeros(f_phi.shape)
     elif tau == 2:
-        rl_intermed = rl(l, k*r)/(k*r)
-        rl_res = rl_intermed + rl(l, k*r, derivative=True)
+        # Frequency domain: rl_intermed = rl(l, omega*a)/(omega*a)
+        rl_intermed = -1/(2*(1j**l))*1j/a*(eval_legendre(l+1, t/a) - eval_legendre(l-1, t/a))/(2*l+1)*boxcar(t/a)
+        # Frequency domain: rl_res = rl_intermed + rl(l, omega*a, derivative=True)
+        rl_res = rl_intermed + 1j*(t/a)*1/(2*(1j**l))/a*eval_legendre(l, t/a) * boxcar(t/a)
 
         f_theta = 1*rl_res * vsh_lm_theta
         f_phi = 1*rl_res * vsh_lm_phi
