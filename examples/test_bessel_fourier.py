@@ -15,7 +15,7 @@ l = 1
 T_MAX = 3 # seems like, this must be at least a, in order to deliver correct results (Probably aliasing)
 NT = 1000 # The higher this is, the better the approximations of the P at the origin become. (Probably aliasing)
 
-a = 3
+a = 0.2
 
 x = np.linspace(0, 100*np.pi, 1000)
 t = np.linspace(-T_MAX, T_MAX, NT) # The larger T_MAX becomes, the worse the error in the bessel function for large x

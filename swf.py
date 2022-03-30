@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.special import sph_harm, factorial, lpmv, spherical_jn, spherical_yn
+from scipy.special import sph_harm, factorial, lpmv, spherical_jn, spherical_yn, eval_legendre
 
 def coord_s2c(r, theta, phi):
     x = r * np.sin(theta) * np.cos(phi)
@@ -159,6 +159,45 @@ def vswf(k, c, tau, l, m, r, theta, phi):
 
     if tau == 1:
         rl_res = rl(l, k*r)
+
+        f_theta = rl_res * vsh_lm_theta
+        f_phi = rl_res * vsh_lm_phi
+        f_r = np.zeros(f_phi.shape)
+    elif tau == 2:
+        rl_intermed = rl(l, k*r)/(k*r)
+        rl_res = rl_intermed + rl(l, k*r, derivative=True)
+
+        f_theta = 1*rl_res * vsh_lm_theta
+        f_phi = 1*rl_res * vsh_lm_phi
+        f_r = rl_intermed*np.sqrt(l*(l+1))*my_sph_harm(l, m, theta, phi)
+    else:
+        raise NotImplemented('NIY')
+
+    return f_r, f_theta, f_phi
+
+def vswf_time_domain(t, c, tau, l, m, r, theta, phi):
+    # p. 4 in scuffSpherical.pdf
+    # tau = 1 -> "M_lm" -> vsh = X_lm
+    # tau = 2 -> "N_lm" -> vxsh = Z_lm
+    # c = 1 -> regular
+    # c = 3 -> incoming
+    # c = 4 -> outgoing
+
+    if c == 1:
+        rl = spherical_jn
+    else:
+        raise Exception('NIY')
+
+    _, vsh_lm_theta, vsh_lm_phi = vec_sph_harm(tau, l, m, theta, phi) # This is either called Xlm or Zlm (depending on tau)
+
+    boxcar = lambda x: np.heaviside(x+1, 0.5)-np.heaviside(x-1, 0.5)
+
+    if tau == 1:
+        c0 = 3e8
+
+        a = r/c0
+        rl_res = 1/(2*(1j**l))/a*eval_legendre(l, t/a) * boxcar(t/a)
+        # rl_res = rl(l, omega*r/c0)
 
         f_theta = rl_res * vsh_lm_theta
         f_phi = rl_res * vsh_lm_phi
